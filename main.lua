@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- 1. WINDOW SETUP
 local Window = Rayfield:CreateWindow({
-   Name = "Vamel BEGZTSHD | Premium",
+   Name = "Vamel Premium | Ultimate Hub",
    LoadingTitle = "Vamel Script Hub",
    LoadingSubtitle = "by Vamel",
    ConfigurationSaving = {
@@ -10,51 +10,40 @@ local Window = Rayfield:CreateWindow({
       FolderName = "VamelConfigs",
       FileName = "VamelHub"
    },
-   Discord = {
-      Enabled = true,
-      Invite = "g7U4xdQUR",
-      RememberJoins = true
-   },
    KeySystem = true,
    KeySettings = {
       Title = "Vamel Key System",
       Subtitle = "Join Discord for Key",
-      Note = "Link Discord otomatis disalin!",
+      Note = "Key: VAMEL_ON_TOP", -- Contoh Key Sekali Pakai/Sederhana
       FileName = "VamelKey",
-      SaveKey = true,
+      SaveKey = false, -- Diatur false agar user harus input lagi jika ingin 'sekali pakai'
       GrabKeyFromSite = false,
-      Key = {"DJYDHDJDY", "EIHDHDHD", "JWHDG5WYE", "SJEYGWIS7", "I27D6HCEI", "WI83YXHSJ", "SOS8CYH3JS", "WO8EYXHSJW", "Eiej", "Skdjndj", "DJJDJ", "DISEI7E", "IEUDUDU", "K2UDU", "EJQ9E8J", "WI8SUOQO", "QPIDJN9WU", "ABZVXFWJ", "WKDHCX", "WLSJBZBX", "WKIDHDJ"} 
+      Key = {"VAMEL_ON_TOP"} 
    }
 })
 
--- Auto Copy Discord
-setclipboard("https://discord.gg/g7U4xdQUR")
-
 -- 2. TABS
-local TabFling = Window:CreateTab("Fling & TP", "zap") 
-local TabLocal = Window:CreateTab("Local Player", "user")
+local TabFling = Window:CreateTab("Fling & Kill", "zap") 
 local TabVisual = Window:CreateTab("Visuals/ESP", "eye")
-local TabLogs = Window:CreateTab("Logs", "file-text")
+local TabLocal = Window:CreateTab("Player Settings", "user")
 
--- 3. FLING SECTION (Improved)
+-- 3. ADVANCED FLING (Working Version)
 local targetPlayer = ""
 
 TabFling:CreateInput({
    Name = "Target Username",
-   PlaceholderText = "Nama Player (Bisa singkat)",
-   RemoveTextAfterFocusLost = false,
+   PlaceholderText = "Nama Player...",
    Callback = function(Text)
       targetPlayer = Text
    end,
 })
 
 TabFling:CreateButton({
-   Name = "Execute Advanced Fling",
+   Name = "Execute Power Fling",
    Callback = function()
       local lp = game.Players.LocalPlayer
       local target = nil
       
-      -- Pencarian player yang lebih cerdas
       for _, v in pairs(game.Players:GetPlayers()) do
          if v.Name:lower():sub(1, #targetPlayer) == targetPlayer:lower() or v.DisplayName:lower():sub(1, #targetPlayer) == targetPlayer:lower() then
             target = v
@@ -62,39 +51,95 @@ TabFling:CreateButton({
          end
       end
 
-      if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-         local char = lp.Character
-         local oldPos = char.HumanoidRootPart.CFrame
+      if target and target.Character and lp.Character then
+         local root = lp.Character:FindFirstChild("HumanoidRootPart")
+         local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
          
-         Rayfield:Notify({Title = "Flinging", Content = "Menyerang: " .. target.Name, Duration = 3})
+         if root and targetRoot then
+            local oldPos = root.CFrame
+            Rayfield:Notify({Title = "Flinging", Content = "Menghancurkan: " .. target.Name, Duration = 3})
 
-         -- Anti-Die saat Fling
-         local bodyVel = Instance.new("BodyAngularVelocity")
-         bodyVel.AngularVelocity = Vector3.new(0, 99999, 0)
-         bodyVel.MaxTorque = Vector3.new(0, 99999, 0)
-         bodyVel.Parent = char.HumanoidRootPart
-         
-         -- Teleport & Rotate Logic
-         local t = tick()
-         while tick() - t < 2 do -- Durasi fling 2 detik
-            task.wait()
-            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(tick()*5000), 0)
+            -- Fling Logic (Spin + High Velocity)
+            local bV = Instance.new("BodyVelocity")
+            bV.Velocity = Vector3.new(500, 500, 500) -- Membuat getaran kuat
+            bV.Parent = root
+            
+            local bAV = Instance.new("BodyAngularVelocity")
+            bAV.AngularVelocity = Vector3.new(0, 99999, 0)
+            bAV.MaxTorque = Vector3.new(0, 99999, 0)
+            bAV.Parent = root
+            
+            local t = tick()
+            while tick() - t < 1.5 do -- Durasi singkat agar tidak ikut mati
+               task.wait()
+               root.CFrame = targetRoot.CFrame * CFrame.new(math.random(-1,1), 0, math.random(-1,1))
             end
+            
+            bV:Destroy()
+            bAV:Destroy()
+            root.CFrame = oldPos
+            root.Velocity = Vector3.new(0,0,0)
          end
-         
-         bodyVel:Destroy()
-         char.HumanoidRootPart.CFrame = oldPos
       else
-         Rayfield:Notify({Title = "Error", Content = "Player tidak ditemukan!", Duration = 3})
+         Rayfield:Notify({Title = "Error", Content = "Target tidak ditemukan!", Duration = 3})
       end
    end,
 })
 
--- 4. LOCAL PLAYER SECTION
+-- 4. ESP VISUALS
+TabVisual:CreateToggle({
+   Name = "Enable ESP Box",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.ESP = Value
+      while _G.ESP do
+         task.wait(0.1)
+         for _, plr in pairs(game.Players:GetPlayers()) do
+            if plr ~= game.Players.LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+               if not plr.Character:FindFirstChild("Highlight") then
+                  local highlight = Instance.new("Highlight")
+                  highlight.Name = "Highlight"
+                  highlight.Parent = plr.Character
+                  highlight.FillTransparency = 0.5
+                  highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+               end
+            end
+         end
+         if not _G.ESP then
+            for _, plr in pairs(game.Players:GetPlayers()) do
+               if plr.Character and plr.Character:FindFirstChild("Highlight") then
+                  plr.Character.Highlight:Destroy()
+               end
+            end
+         end
+      end
+   end,
+})
+
+-- 5. GOD MODE & LOCAL PLAYER
+TabLocal:CreateButton({
+   Name = "God Mode (Anti-Die)",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local character = player.Character
+      if character and character:FindFirstChild("Humanoid") then
+         -- Teknik menghapus humanoid untuk memutus script damage game
+         local cam = workspace.CurrentCamera
+         local oldCF = character.PrimaryPart.CFrame
+         local newHum = character.Humanoid:Clone()
+         character.Humanoid:Destroy()
+         newHum.Parent = character
+         player.Character = nil
+         player.Character = character
+         workspace.CurrentCamera.CameraSubject = character.Humanoid
+         Rayfield:Notify({Title = "God Mode", Content = "Aktif! Kamu sekarang kebal damage.", Duration = 4})
+      end
+   end,
+})
+
 TabLocal:CreateSlider({
-   Name = "Walkspeed",
-   Range = {16, 500},
+   Name = "Speed",
+   Range = {16, 300},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
@@ -102,63 +147,4 @@ TabLocal:CreateSlider({
    end,
 })
 
-TabLocal:CreateSlider({
-   Name = "Jump Power",
-   Range = {50, 500},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
-      game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-   end,
-})
-
-TabLocal:CreateButton({
-   Name = "God Mode (Simple)",
-   Callback = function()
-      -- Mode ini membuat kamu tidak bisa mati di beberapa game, tapi hati-hati bisa merusak kontrol
-      local player = game.Players.LocalPlayer
-      if player.Character then
-          local hum = player.Character:FindFirstChildOfClass("Humanoid")
-          if hum then
-              hum.MaxHealth = math.huge
-              hum.Health = math.huge
-          end
-      end
-      Rayfield:Notify({Title = "God Mode", Content = "Health diatur ke Infinity!", Duration = 2})
-   end,
-})
-
--- 5. PROTECTION & UTILITY
-TabLocal:CreateSection("Utility")
-
-TabLocal:CreateToggle({
-   Name = "Anti-AFK",
-   CurrentValue = true,
-   Callback = function(Value)
-      local vu = game:GetService("VirtualUser")
-      game:GetService("Players").LocalPlayer.Idled:Connect(function()
-         if Value then
-            vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-            wait(1)
-            vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-         end
-      end)
-   end,
-})
-
--- 6. LOGS
-TabLogs:CreateLabel("User ID: " .. game.Players.LocalPlayer.UserId)
-TabLogs:CreateLabel("Account Age: " .. game.Players.LocalPlayer.AccountAge .. " days")
-TabLogs:CreateButton({
-   Name = "Destroy UI",
-   Callback = function()
-      Rayfield:Destroy()
-   end,
-})
-
-Rayfield:Notify({
-   Title = "Success!",
-   Content = "Script berhasil dimuat.",
-   Duration = 5
-})
+Rayfield:Notify({Title = "Vamel Hub Loaded", Content = "Gunakan secara bijak!", Duration = 5})
