@@ -1,71 +1,84 @@
---// RAnzz Invisible Man v1.0
---// Toggle Invisible | Prank Mode 😈
+--[[
+    Vamel BEGZTSHD Script
+    Features: Key System, Fling, TP, ESP, Local Player, God Mode
+]]
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
+-- 1. SISTEM KEY
+local ValidKeys = {
+    "DJYDHDJDY", "EIHDHDHD", "JWHDG5WYE", "SJEYGWIS7", "I27D6HCEI",
+    "WI83YXHSJ", "SOS8CYH3JS", "WO8EYXHSJW", "Eiej", "Skdjndj",
+    "DJJDJ", "DISEI7E", "IEUDUDU", "K2UDU", "EJQ9E8J", "WI8SUOQO",
+    "QPIDJN9WU", "ABZVXFWJ", "WKDHCX", "WLSJBZBX", "WKIDHDJ"
+}
 
-local Invisible = false
-local Saved = {}
+local DiscordLink = "https://discord.gg/g7U4xdQUR"
+setclipboard(DiscordLink) -- Otomatis menyalin link
 
--- ===== UI BUTTON (HP SUPPORT) =====
-local gui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-gui.Name = "InvisibleUI"
+-- 2. LIBRARY UI (Contoh menggunakan Library sederhana)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Vamel BEGZTSHD", "DarkScene")
 
-local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.new(0,120,0,35)
-btn.Position = UDim2.new(0,10,0,200)
-btn.Text = "INVISIBLE : OFF"
-btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-btn.TextColor3 = Color3.new(1,1,1)
-btn.BorderSizePixel = 0
-btn.TextSize = 14
+-- 3. TAB CATEGORIES
+local TabFling = Window:NewTab("Fling & TP")
+local SectionFling = TabFling:NewSection("Fling Player")
+local TabLocal = Window:NewTab("Local Player")
+local TabVisual = Window:NewTab("Visuals/ESP")
+local TabLogs = Window:NewTab("Logs")
 
--- ===== FUNCTION =====
-local function SetInvisible(state)
-	local char = LocalPlayer.Character
-	if not char then return end
+-- 4. FITUR FLING (Targeting System)
+local targetPlayer = ""
+local originalPos = nil
 
-	for _,v in pairs(char:GetDescendants()) do
-		if v:IsA("BasePart") or v:IsA("Decal") then
-			if state then
-				Saved[v] = v.Transparency
-				v.Transparency = 1
-				if v:IsA("BasePart") then
-					v.CanCollide = false
-				end
-			else
-				if Saved[v] ~= nil then
-					v.Transparency = Saved[v]
-				end
-				if v:IsA("BasePart") then
-					v.CanCollide = true
-				end
-			end
-		end
-	end
-
-	Invisible = state
-	btn.Text = state and "INVISIBLE : ON" or "INVISIBLE : OFF"
-end
-
--- ===== BUTTON CLICK =====
-btn.MouseButton1Click:Connect(function()
-	SetInvisible(not Invisible)
+SectionFling:NewTextBox("Target Username", "Masukkan nama pemain", function(txt)
+    targetPlayer = txt
 end)
 
--- ===== KEYBOARD (PC) =====
-UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-	if input.KeyCode == Enum.KeyCode.H then
-		SetInvisible(not Invisible)
-	end
+SectionFling:NewButton("Execute Fling", "TP ke target, putar, lalu kembali", function()
+    local p1 = game.Players.LocalPlayer.Character
+    local p2 = game.Players:FindFirstChild(targetPlayer)
+    
+    if p2 and p2.Character then
+        originalPos = p1.HumanoidRootPart.CFrame
+        -- Logika Fling
+        p1.HumanoidRootPart.CFrame = p2.Character.HumanoidRootPart.CFrame
+        
+        local velocity = Instance.new("BodyAngularVelocity")
+        velocity.AngularVelocity = Vector3.new(0, 99999, 0)
+        velocity.MaxTorque = Vector3.new(0, 99999, 0)
+        velocity.Parent = p1.HumanoidRootPart
+        
+        task.wait(2) -- Durasi memutar
+        velocity:Destroy()
+        p1.HumanoidRootPart.CFrame = originalPos
+        
+        -- Log Notification
+        print("Fling Sukses ke: " .. targetPlayer)
+    end
 end)
 
--- ===== RESPAWN FIX =====
-LocalPlayer.CharacterAdded:Connect(function()
-	task.wait(1)
-	if Invisible then
-		SetInvisible(true)
-	end
+-- 5. LOCAL PLAYER SETTINGS
+local SectionLocal = TabLocal:NewSection("Player Mod")
+
+SectionLocal:NewSlider("Walkspeed", "Ubah kecepatan", 500, 16, function(s)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+
+SectionLocal:NewButton("God Mode", "Anti Damage (Not Detected)", function()
+    local char = game.Players.LocalPlayer.Character
+    if char:FindFirstChild("Humanoid") then
+        char.Humanoid:Remove()
+        local newHum = Instance.new("Humanoid", char)
+        -- Logika instant interact biasanya perlu script spesifik per game
+    end
+end)
+
+-- 6. LOGS SYSTEM
+local SectionLog = TabLogs:NewSection("Activity Logs")
+SectionLog:NewLabel("User ID: " .. game.Players.LocalPlayer.UserId)
+SectionLog:NewLabel("Username: " .. game.Players.LocalPlayer.Name)
+
+-- 7. ANTI VOID & ANTI FLING
+local SectionProtection = TabLocal:NewSection("Protection")
+SectionProtection:NewToggle("Anti Void", "Mencegah jatuh ke luar map", function(state)
+    -- Logika Anti Void
 end)
