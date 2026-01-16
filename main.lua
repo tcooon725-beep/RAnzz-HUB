@@ -13,12 +13,18 @@ local Window = Rayfield:CreateWindow({
    KeySystem = true,
    KeySettings = {
       Title = "Vamel Key System",
-      Subtitle = "Join Discord for Key",
-      Note = "Key: VAMEL_ON_TOP", -- Contoh Key Sekali Pakai/Sederhana
+      Subtitle = "Enter your license key",
+      Note = "Check Discord for the latest keys!",
       FileName = "VamelKey",
-      SaveKey = false, -- Diatur false agar user harus input lagi jika ingin 'sekali pakai'
+      SaveKey = true, 
       GrabKeyFromSite = false,
-      Key = {"VAMEL_ON_TOP"} 
+      -- Added your provided keys here
+      Key = {
+         "BEGZTSHD", "DJYDHDJDY", "EIHDHDHD", "JWHDG5WYE", "SJEYGWIS7", 
+         "I27D6HCEI", "WI83YXHSJ", "SOS8CYH3JS", "WO8EYXHSJW", "Eiej", 
+         "Skdjndj", "DJJDJ", "DISEI7E", "IEUDUDU", "K2UDU", "EJQ9E8J", 
+         "WI8SUOQO", "QPIDJN9WU", "ABZVXFWJ", "WKDHCX", "WLSJBZBX", "WKIDHDJ"
+      } 
    }
 })
 
@@ -27,12 +33,14 @@ local TabFling = Window:CreateTab("Fling & Kill", "zap")
 local TabVisual = Window:CreateTab("Visuals/ESP", "eye")
 local TabLocal = Window:CreateTab("Player Settings", "user")
 
--- 3. ADVANCED FLING (Working Version)
+---
+
+-- 3. ADVANCED FLING
 local targetPlayer = ""
 
 TabFling:CreateInput({
    Name = "Target Username",
-   PlaceholderText = "Nama Player...",
+   PlaceholderText = "Enter name...",
    Callback = function(Text)
       targetPlayer = Text
    end,
@@ -57,11 +65,10 @@ TabFling:CreateButton({
          
          if root and targetRoot then
             local oldPos = root.CFrame
-            Rayfield:Notify({Title = "Flinging", Content = "Menghancurkan: " .. target.Name, Duration = 3})
+            Rayfield:Notify({Title = "Flinging", Content = "Targeting: " .. target.Name, Duration = 3})
 
-            -- Fling Logic (Spin + High Velocity)
             local bV = Instance.new("BodyVelocity")
-            bV.Velocity = Vector3.new(500, 500, 500) -- Membuat getaran kuat
+            bV.Velocity = Vector3.new(500, 500, 500)
             bV.Parent = root
             
             local bAV = Instance.new("BodyAngularVelocity")
@@ -70,7 +77,7 @@ TabFling:CreateButton({
             bAV.Parent = root
             
             local t = tick()
-            while tick() - t < 1.5 do -- Durasi singkat agar tidak ikut mati
+            while tick() - t < 1.5 do 
                task.wait()
                root.CFrame = targetRoot.CFrame * CFrame.new(math.random(-1,1), 0, math.random(-1,1))
             end
@@ -81,58 +88,52 @@ TabFling:CreateButton({
             root.Velocity = Vector3.new(0,0,0)
          end
       else
-         Rayfield:Notify({Title = "Error", Content = "Target tidak ditemukan!", Duration = 3})
+         Rayfield:Notify({Title = "Error", Content = "Target not found!", Duration = 3})
       end
    end,
 })
 
--- 4. ESP VISUALS
+-- 4. ESP VISUALS (Optimized)
 TabVisual:CreateToggle({
    Name = "Enable ESP Box",
    CurrentValue = false,
    Callback = function(Value)
       _G.ESP = Value
-      while _G.ESP do
-         task.wait(0.1)
-         for _, plr in pairs(game.Players:GetPlayers()) do
-            if plr ~= game.Players.LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-               if not plr.Character:FindFirstChild("Highlight") then
-                  local highlight = Instance.new("Highlight")
-                  highlight.Name = "Highlight"
-                  highlight.Parent = plr.Character
-                  highlight.FillTransparency = 0.5
-                  highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+      if _G.ESP then
+         task.spawn(function()
+            while _G.ESP do
+               for _, plr in pairs(game.Players:GetPlayers()) do
+                  if plr ~= game.Players.LocalPlayer and plr.Character then
+                     if not plr.Character:FindFirstChild("Highlight") then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = "Highlight"
+                        highlight.Parent = plr.Character
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                     end
+                  end
                end
+               task.wait(1)
             end
-         end
-         if not _G.ESP then
-            for _, plr in pairs(game.Players:GetPlayers()) do
-               if plr.Character and plr.Character:FindFirstChild("Highlight") then
-                  plr.Character.Highlight:Destroy()
-               end
+         end)
+      else
+         for _, plr in pairs(game.Players:GetPlayers()) do
+            if plr.Character and plr.Character:FindFirstChild("Highlight") then
+               plr.Character.Highlight:Destroy()
             end
          end
       end
    end,
 })
 
--- 5. GOD MODE & LOCAL PLAYER
+-- 5. LOCAL PLAYER
 TabLocal:CreateButton({
-   Name = "God Mode (Anti-Die)",
+   Name = "God Mode",
    Callback = function()
       local player = game.Players.LocalPlayer
-      local character = player.Character
-      if character and character:FindFirstChild("Humanoid") then
-         -- Teknik menghapus humanoid untuk memutus script damage game
-         local cam = workspace.CurrentCamera
-         local oldCF = character.PrimaryPart.CFrame
-         local newHum = character.Humanoid:Clone()
-         character.Humanoid:Destroy()
-         newHum.Parent = character
-         player.Character = nil
-         player.Character = character
-         workspace.CurrentCamera.CameraSubject = character.Humanoid
-         Rayfield:Notify({Title = "God Mode", Content = "Aktif! Kamu sekarang kebal damage.", Duration = 4})
+      if player.Character and player.Character:FindFirstChild("Humanoid") then
+         player.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+         Rayfield:Notify({Title = "God Mode", Content = "Attempted God Mode activation.", Duration = 4})
       end
    end,
 })
@@ -143,8 +144,10 @@ TabLocal:CreateSlider({
    Increment = 1,
    CurrentValue = 16,
    Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+      if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+      end
    end,
 })
 
-Rayfield:Notify({Title = "Vamel Hub Loaded", Content = "Gunakan secara bijak!", Duration = 5})
+Rayfield:Notify({Title = "Vamel Hub Loaded", Content = "Ready to use!", Duration = 5})
